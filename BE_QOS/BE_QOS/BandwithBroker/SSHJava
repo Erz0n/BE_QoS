@@ -1,0 +1,69 @@
+package test;
+
+import com.jcraft.jsch.*;
+import java.awt.*;
+import java.io.OutputStream;
+
+import javax.swing.*;
+
+public class Shell{
+  public static void main(String[] arg){
+    
+    try{
+      JSch jsch=new JSch();
+
+      //jsch.setKnownHosts("/home/foo/.ssh/known_hosts");
+
+      String host="127.0.0.1";
+      String user="evan";
+      
+      Session session=jsch.getSession(user, host, 22);
+
+	  String passwd = "aa";
+      session.setPassword(passwd);
+      
+      java.util.Properties config = new java.util.Properties(); 
+      
+      // Disable Host Key Checking ==> unsecure 
+      config.put("StrictHostKeyChecking", "no");
+      
+      session.setConfig(config);
+
+      session.connect(30000);   // making a connection with timeout.
+
+      Channel channel=session.openChannel("exec");
+      
+      channel.setInputStream(System.in);
+
+
+      
+      channel.setOutputStream(System.out);
+      channel.connect(3*1000);
+      
+      ((ChannelExec) channel).setCommand("ls -al");
+
+      
+
+    }
+    catch(Exception e){
+      System.out.println(e);
+    }
+  }
+
+  public static abstract class MyUserInfo
+                          implements UserInfo, UIKeyboardInteractive{
+    public String getPassword(){ return null; }
+    public boolean promptYesNo(String str){ return false; }
+    public String getPassphrase(){ return null; }
+    public boolean promptPassphrase(String message){ return false; }
+    public boolean promptPassword(String message){ return false; }
+    public void showMessage(String message){ }
+    public String[] promptKeyboardInteractive(String destination,
+                                              String name,
+                                              String instruction,
+                                              String[] prompt,
+                                              boolean[] echo){
+      return null;
+    }
+  }
+}

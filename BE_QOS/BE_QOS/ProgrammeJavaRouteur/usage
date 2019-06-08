@@ -1,0 +1,57 @@
+
+
+######################################CREATION DE L'ARBRE		######################################
+######################################INITIALISATION DES FILES	######################################
+// Créationde la discipline queuing racine
+tc qdisc del dev eth0 root
+tc qdisc add dev eth0 root handle 1: htb default 20
+
+// Création des classes filles 
+tc class add dev eth0 parent 1: classid 1:1 htb rate $PREMIUM_DR ceil 700kbit // VOIX
+tc class add dev eth0 parent 1: classid 1:2 htb rate $BE_DR ceil 57900kbit // DEFAUT
+
+
+//Cration d'une file pour chaque appel
+tc class add dev eth0 parent 1:1 classid 1:10 htb rate 64kbit ceil 64kbit
+tc class add dev eth0 parent 1:1 classid 1:11 htb rate 64kbit ceil 64kbit
+tc class add dev eth0 parent 1:1 classid 1:12 htb rate 64kbit ceil 64kbit
+tc class add dev eth0 parent 1:1 classid 1:13 htb rate 64kbit ceil 64kbit
+....
+
+########################################################################################################
+########################################################################################################
+
+
+######################################MARQUAGE DU TRAFIC######################################
+
+iptables -A PREROUTING -t mangle -s $IP_SRC -d $IP_DST -p tcp --dport $PORT -j MARK --set-mark $NUM_FILE_APPEL
+
+
+######################################CLASSIFICATION DES FLUX EN FCT DU MARQUAGE######################################
+
+tc filter add dev eth0 parent 1:1 protocol ip prio 1 handle $NUM_FILE_APPEL fw flowid 1:$NUM_FILE_APPEL
+
+
+###########################SET TOS######################################
+iptables -A PREROUTING -t mangle -s $IP_SRC -d $IP_DST -p tcp --dport $Dest_port -j TOS --set-tos $VAL_TOS
+
+
+
+
+
+---------------------------------------------------------------------------------
+
+Useful commands : 
+
+
+sudo iptables -S # Lister les tables actives
+sudo iptables -L INPUT -v # Lister la table INPUT + nb paquets
+
+
+
+## ajout
+sudo iptables -A INPUT -s 66.85.48.9 -p icmp -j DROP
+
+## supprime
+sudo iptables -D INPUT -s 66.85.48.9 -p icmp -j DRO
+
